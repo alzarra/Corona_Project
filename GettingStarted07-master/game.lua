@@ -79,12 +79,35 @@ end
 
 
 local function createAsteroid()
-	ofs = math.random(3)
-	local newAsteroid = display.newImageRect( mainGroup, objectSheet, ofs, 102, 85 )
-	table.insert( asteroidsTable, newAsteroid )
-	physics.addBody( newAsteroid, "dynamic", { radius=40, bounce=0.8 } )
-	newAsteroid.myName = "asteroid"
 
+	local newAsteroid
+	ofs = math.random(3)
+	
+	-- Asteroid type 1, white
+	if ( ofs == 1 ) then
+		newAsteroid = display.newImageRect( mainGroup, objectSheet, 1, 102, 85 )
+		table.insert( asteroidsTable, newAsteroid )
+		physics.addBody( newAsteroid, "dynamic", { radius=40, bounce=0.8 } )
+		newAsteroid.hp = 1
+		newAsteroid.myName = "asteroid1"
+	-- Asteroid type 2, red
+	elseif ( ofs == 2 ) then
+		newAsteroid = display.newImageRect( mainGroup, objectSheet, 2, 102, 85 )
+		table.insert( asteroidsTable, newAsteroid )
+		physics.addBody( newAsteroid, "dynamic", { radius=40, bounce=0.8 } )
+		newAsteroid.hp = 2
+		newAsteroid.myName = "asteroid2"
+	-- Asteroid type 3, brown
+	elseif ( ofs == 3 ) then
+		newAsteroid = display.newImageRect( mainGroup, objectSheet, 3, 102, 85 )
+		table.insert( asteroidsTable, newAsteroid )
+		physics.addBody( newAsteroid, "dynamic", { radius=40, bounce=0.8 } )
+		newAsteroid.hp = 3
+		newAsteroid.myName = "asteroid3"
+	end
+	
+
+	
 	local whereFrom = math.random( 3 )
 
 	if ( whereFrom == 1 ) then
@@ -207,30 +230,89 @@ local function onCollision( event )
 
 		local obj1 = event.object1
 		local obj2 = event.object2
-
-		if ( ( obj1.myName == "laser" and obj2.myName == "asteroid" ) or
-			 ( obj1.myName == "asteroid" and obj2.myName == "laser" ) )
+		
+		--Shooting Asteroid type 1, white
+		if ( ( obj1.myName == "laser" and obj2.myName == "asteroid1" ) or
+			 ( obj1.myName == "asteroid1" and obj2.myName == "laser" ) )
 		then
-			-- Remove both the laser and asteroid
+			--Reduces Asteroid HP and removes laser
+			obj2.hp = obj2.hp - 1
 			display.remove( obj1 )
-			display.remove( obj2 )
+			
+			if ( obj2.hp == 0) then
+				--Updates score and removes asteroid
+				score = score + 100
+				scoreText.text = "Score: " .. score
+				display.remove( obj2 )
 
-			-- Play explosion sound!
-			audio.play( explosionSound )
+				-- Play explosion sound!
+				audio.play( explosionSound )
 
-			for i = #asteroidsTable, 1, -1 do
-				if ( asteroidsTable[i] == obj1 or asteroidsTable[i] == obj2 ) then
-					table.remove( asteroidsTable, i )
-					break
+				for i = #asteroidsTable, 1, -1 do
+					if ( asteroidsTable[i] == obj1 or asteroidsTable[i] == obj2 ) then
+						table.remove( asteroidsTable, i )
+						break
+					end
 				end
 			end
 
-			-- Increase score
-			score = score + 100
-			scoreText.text = "Score: " .. score
+		--Shooting Asteroid type 2, red
+		elseif ( ( obj1.myName == "laser" and obj2.myName == "asteroid2" ) or
+			 ( obj1.myName == "asteroid2" and obj2.myName == "laser" ) )
+		then
+			--Reduces Asteroid HP and removes laser
+			obj2.hp = obj2.hp - 1
+			display.remove( obj1 )
+			
+			if ( obj2.hp == 0) then
+				--Updates score and removes asteroid
+				score = score + 200
+				scoreText.text = "Score: " .. score
+				display.remove( obj2 )
 
-		elseif ( ( obj1.myName == "ship" and obj2.myName == "asteroid" ) or
-				 ( obj1.myName == "asteroid" and obj2.myName == "ship" ) )
+				-- Play explosion sound!
+				audio.play( explosionSound )
+
+				for i = #asteroidsTable, 1, -1 do
+					if ( asteroidsTable[i] == obj1 or asteroidsTable[i] == obj2 ) then
+						table.remove( asteroidsTable, i )
+						break
+					end
+				end
+			end
+			
+		--Shooting Asteroid type 3, brown
+		elseif ( ( obj1.myName == "laser" and obj2.myName == "asteroid3" ) or
+			 ( obj1.myName == "asteroid3" and obj2.myName == "laser" ) )
+		then
+			--Reduces Asteroid HP and removes laser
+			obj2.hp = obj2.hp - 1
+			display.remove( obj1 )
+			
+			if ( obj2.hp == 0) then
+				--Updates score and removes asteroid
+				score = score + 300
+				scoreText.text = "Score: " .. score
+				display.remove( obj2 )
+
+				-- Play explosion sound!
+				audio.play( explosionSound )
+
+				for i = #asteroidsTable, 1, -1 do
+					if ( asteroidsTable[i] == obj1 or asteroidsTable[i] == obj2 ) then
+						table.remove( asteroidsTable, i )
+						break
+					end
+				end
+			end
+
+		--Ship collision with asteroid
+		elseif ( ( obj1.myName == "ship" and obj2.myName == "asteroid1" ) or
+				 ( obj1.myName == "asteroid1" and obj2.myName == "ship" ) or
+				 ( obj1.myName == "ship" and obj2.myName == "asteroid2" ) or
+				 ( obj1.myName == "asteroid2" and obj2.myName == "ship" ) or 
+				 ( obj1.myName == "ship" and obj2.myName == "asteroid3" ) or
+				 ( obj1.myName == "asteroid3" and obj2.myName == "ship" ) )
 		then
 			if ( died == false ) then
 				died = true

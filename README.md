@@ -14,3 +14,4 @@ Added movement along the Y-axis
 Added diversity to asteroids (3 possible kinds instead of 1)
 
 Mohammad:
+Made each type of asteroid has their own health
