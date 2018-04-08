@@ -1,12 +1,13 @@
 # Corona Project
-enhance the "space explorer" game and add new idea 
+enhance the "space explorer" game and add new idea
 
 Ali:
 made moving background
 change all graphic
-change all sounds 
+change all sounds
 
 Mandub:
+Add New lives 
 
 Jake:
 Fixed all of the runtime errors
