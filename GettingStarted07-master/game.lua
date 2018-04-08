@@ -57,7 +57,7 @@ local score = 0
 local died = false
 
 local asteroidsTable = {}
-
+local liveTable = {}
 local ship
 local gameLoopTimer
 local livesText
@@ -77,12 +77,29 @@ local function updateText()
 	scoreText.text = "Score: " .. score
 end
 
+-- this function for adding newlive
+local function createNewlive()
+  local whennewlive = math.random( 5 )
+  if ( whennewlive == 1 ) then
+    -- new live image will be like the ship image index number 4
+    local newlive = display.newImageRect( mainGroup, objectSheet, 4, 50, 40 )
+    table.insert( liveTable, newlive )
+    physics.addBody( newlive, "dynamic", {  radius=15, isSensor=true  } )
+    newlive.myName = "newlive"
+    -- new live alwys come form the top
+    newlive.x = math.random( display.contentWidth )
+    newlive.y = -60
+    newlive:setLinearVelocity( math.random( -40,40 ), math.random( 40,120 ) )
+  end
+
+end -- end createNewlive()
+
 
 local function createAsteroid()
 
 	local newAsteroid
 	ofs = math.random(3)
-	
+
 	-- Asteroid type 1, white
 	if ( ofs == 1 ) then
 		newAsteroid = display.newImageRect( mainGroup, objectSheet, 1, 102, 85 )
@@ -105,9 +122,9 @@ local function createAsteroid()
 		newAsteroid.hp = 3
 		newAsteroid.myName = "asteroid3"
 	end
-	
 
-	
+
+
 	local whereFrom = math.random( 3 )
 
 	if ( whereFrom == 1 ) then
@@ -168,7 +185,7 @@ local function dragShip( event )
 		-- Move the ship to the new touch position
 		ship.x = event.x - ship.touchOffsetX
 		ship.y = event.y - ship.touchOffsetX
-		
+
 
 	elseif ( "ended" == phase or "cancelled" == phase ) then
 		-- Release touch focus on the ship
@@ -178,12 +195,17 @@ local function dragShip( event )
 	return true  -- Prevents touch propagation to underlying objects
 end
 
-	
+
 
 local function gameLoop()
 
 	-- Create new asteroid
 	createAsteroid()
+
+
+    -- Create new live
+    createNewlive()
+
 
 	-- Remove asteroids which have drifted off screen
 	for i = #asteroidsTable, 1, -1 do
@@ -198,6 +220,20 @@ local function gameLoop()
 			table.remove( asteroidsTable, i )
 		end
 	end
+
+  -- Remove lives which have drifted off screen
+  for i = #liveTable, 1, -1 do
+    local thisLive = liveTable[i]
+
+    if ( thisLive.x < -100 or
+       thisLive.x > display.contentWidth + 100 or
+       thisLive.y < -100 or
+       thisLive.y > display.contentHeight + 100 )
+    then
+      display.remove( thisLive )
+      table.remove( liveTable, i )
+    end
+  end
 end
 
 
@@ -230,7 +266,7 @@ local function onCollision( event )
 
 		local obj1 = event.object1
 		local obj2 = event.object2
-		
+
 		--Shooting Asteroid type 1, white
 		if ( ( obj1.myName == "laser" and obj2.myName == "asteroid1" ) or
 			 ( obj1.myName == "asteroid1" and obj2.myName == "laser" ) )
@@ -238,7 +274,7 @@ local function onCollision( event )
 			--Reduces Asteroid HP and removes laser
 			obj2.hp = obj2.hp - 1
 			display.remove( obj1 )
-			
+
 			if ( obj2.hp == 0) then
 				--Updates score and removes asteroid
 				score = score + 100
@@ -263,7 +299,7 @@ local function onCollision( event )
 			--Reduces Asteroid HP and removes laser
 			obj2.hp = obj2.hp - 1
 			display.remove( obj1 )
-			
+
 			if ( obj2.hp == 0) then
 				--Updates score and removes asteroid
 				score = score + 200
@@ -280,7 +316,7 @@ local function onCollision( event )
 					end
 				end
 			end
-			
+
 		--Shooting Asteroid type 3, brown
 		elseif ( ( obj1.myName == "laser" and obj2.myName == "asteroid3" ) or
 			 ( obj1.myName == "asteroid3" and obj2.myName == "laser" ) )
@@ -288,7 +324,7 @@ local function onCollision( event )
 			--Reduces Asteroid HP and removes laser
 			obj2.hp = obj2.hp - 1
 			display.remove( obj1 )
-			
+
 			if ( obj2.hp == 0) then
 				--Updates score and removes asteroid
 				score = score + 300
@@ -306,11 +342,32 @@ local function onCollision( event )
 				end
 			end
 
+    -- check collision with ship and newlive
+    elseif ( ( obj1.myName == "ship" and obj2.myName == "newlive" ) or
+         ( obj1.myName == "newlive" and obj2.myName == "ship" ) )
+    then
+      lives = lives + 1
+      livesText.text = "Lives: " .. lives
+      if (obj1.myName == "newlive") then
+        display.remove( obj1 )
+      end
+      if (obj2.myName == "newlive") then
+        display.remove( obj2 )
+      end
+
+      -- Play explosion sound!
+      audio.play( explosionSound )
+      for i = #liveTable, 1, -1 do
+				if ( liveTable[i] == obj1 or liveTable[i] == obj2 ) then
+					table.remove( liveTable, i )
+					break
+				end
+			end
 		--Ship collision with asteroid
 		elseif ( ( obj1.myName == "ship" and obj2.myName == "asteroid1" ) or
 				 ( obj1.myName == "asteroid1" and obj2.myName == "ship" ) or
 				 ( obj1.myName == "ship" and obj2.myName == "asteroid2" ) or
-				 ( obj1.myName == "asteroid2" and obj2.myName == "ship" ) or 
+				 ( obj1.myName == "asteroid2" and obj2.myName == "ship" ) or
 				 ( obj1.myName == "ship" and obj2.myName == "asteroid3" ) or
 				 ( obj1.myName == "asteroid3" and obj2.myName == "ship" ) )
 		then
@@ -358,9 +415,9 @@ function scene:create( event )
 
 	uiGroup = display.newGroup()    -- Display group for UI objects like the score
 	sceneGroup:insert( uiGroup )    -- Insert into the scene's view group
-	
-	
-	
+
+
+
 	-- Set Variables
 	_W = display.contentWidth; -- Get the width of the screen
 	_H = display.contentHeight; -- Get the height of the screen
@@ -370,22 +427,22 @@ function scene:create( event )
 	-- Add First Background
 	local bg1 = display.newImageRect(backGroup, "bg1.png", 768, 1024)
 	bg1.x = _W*0.5; bg1.y = _H/2;
- 
+
 	-- Add Second Background
 	local bg2 = display.newImageRect(backGroup, "bg1.png", 768, 1024)
 	bg2.x = _W*0.5; bg2.y = bg1.y+1024;
-	 
+
 	-- Add Third Background
 	local bg3 = display.newImageRect(backGroup, "bg1.png", 768, 1024)
 	bg3.x = _W*0.5; bg3.y = bg2.y+1024;
 
-	local function move(event) 
+	local function move(event)
 	 -- move backgrounds to the left by scrollSpeed, default is 2
 	 if(lives == 0) then return end
 	 bg1.y = bg1.y + scrollSpeed;
 	 bg2.y = bg2.y + scrollSpeed;
 	 bg3.y = bg3.y + scrollSpeed;
-	 
+
 	 -- Set up listeners so when backgrounds hits a certain point off the screen,
 	 -- move the background to the right off screen
 	 if (bg1.y + bg1.contentWidth) > 2304 then
@@ -401,13 +458,13 @@ function scene:create( event )
 
 	-- Create a runtime event to move backgrounds
 	Runtime:addEventListener( "enterFrame", move )
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
 	ship = display.newImageRect( mainGroup, objectSheet, 4, 98, 79 )
 	ship.x = display.contentCenterX
 	ship.y = display.contentHeight - 100
