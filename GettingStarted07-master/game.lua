@@ -79,7 +79,7 @@ end
 
 -- this function for adding newlive
 local function createNewlive()
-  local whennewlive = math.random( 5 )
+  local whennewlive = math.random( 15 )
   if ( whennewlive == 1 ) then
     -- new live image will be like the ship image index number 4
     local newlive = display.newImageRect( mainGroup, objectSheet, 4, 50, 40 )
